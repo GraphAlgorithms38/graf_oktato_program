@@ -202,7 +202,7 @@ const ALGOS = [
       el(
         "div",
         {},
-        el("label", { html: "Kiindulási csúcs száma:" }),
+        el("label", { html: "Kiindulási csúcs száma: " }),
         (() => {
           const s = el("input", {
             type: "number",
@@ -224,7 +224,7 @@ const ALGOS = [
       el(
         "div",
         {},
-        el("label", { html: "Start:" }),
+        el("label", { html: "Kiindulási csúcs száma: " }),
         (() => {
           const s = el("input", {
             type: "number",

@@ -1,5 +1,7 @@
+// CSS selector alapján első elem kiválasztása
 export const $ = (sel) => document.querySelector(sel);
 
+// Új DOM elem létrehozása attribútumokkal és gyerekekkel
 export const el = (tag, attrs = {}, ...children) => {
   const n = document.createElement(tag);
 
@@ -13,8 +15,10 @@ export const el = (tag, attrs = {}, ...children) => {
   return n;
 };
 
+// Érték korlátozása adott intervallumra
 export const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
+// Toast üzenet megjelenítése
 export function toast(msg) {
   const t = $("#toast");
   if (!t) return;

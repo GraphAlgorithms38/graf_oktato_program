@@ -1,8 +1,10 @@
+// Gráf vizualizációs osztály (SVG)
 export class GraphView {
   constructor(svg, { onNodeDblClick } = {}) {
     this.svg = svg;
     this.g = null;
     this.pos = [];
+    // Kiemelések (pl. bejárt csúcsok, élek)
     this.highlight = {
       nodes: new Set(),
       edges: new Set(),
@@ -16,6 +18,7 @@ export class GraphView {
     this.layoutCircle();
     this.render();
   }
+  // Csúcsok kör alakú elrendezése
   layoutCircle() {
     const W = 1000,
       H = 700,
@@ -32,6 +35,7 @@ export class GraphView {
       nd.y = this.pos[i].y;
     });
   }
+  // Él azonosító generálása
   _edgeId(e) {
     return `${e.u}-${e.v}`;
   }
@@ -39,6 +43,7 @@ export class GraphView {
     const svg = this.svg;
     svg.innerHTML = "";
     if (!this.g) return;
+    // Nyílhegy definiálása
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const marker = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -58,7 +63,7 @@ export class GraphView {
     defs.appendChild(marker);
     svg.appendChild(defs);
 
-    // élek
+    // Élek kirajzolása
     this.g.edges.forEach((e) => {
       const a = this.g.nodes[e.u],
         b = this.g.nodes[e.v];
@@ -76,7 +81,7 @@ export class GraphView {
       );
       if (this.g.directed) line.setAttribute("marker-end", "url(#arrow)");
       svg.appendChild(line);
-      // súly címke
+      // Súly címke az él közepén
       const midx = (a.x + b.x) / 2,
         midy = (a.y + b.y) / 2;
       const gg = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -100,7 +105,7 @@ export class GraphView {
       svg.appendChild(gg);
     });
 
-    // csúcsok
+    // Csúcsok kirajzolása
     this.g.nodes.forEach((nd, i) => {
       const gg = document.createElementNS("http://www.w3.org/2000/svg", "g");
       gg.setAttribute(
@@ -125,6 +130,7 @@ export class GraphView {
       svg.appendChild(gg);
     });
   }
+  // Kiemelések beállítása és újrarajzolás
   setHighlights({
     nodes = new Set(),
     edges = new Set(),

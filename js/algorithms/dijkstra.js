@@ -1,11 +1,13 @@
+// Dijkstra algoritmus lépéseinek kezelése
 export function dijkstraSteps(g, start = 0) {
   const n = g.n;
-  const dist = Array(n).fill(Infinity);
-  const prev = Array(n).fill(null);
-  const used = new Set();
+  const dist = Array(n).fill(Infinity); // Távolságok tömbje
+  const prev = Array(n).fill(null); // Előző elemek tömbje
+  const used = new Set(); // Rögzített csúcsok
   dist[start] = 0;
   const steps = [];
 
+  // Kezdő lépés rögzítése
   steps.push({
     phase: "Inicializálás",
     msg: `Kezdőcsúcs: V${start}. Kezdeti d táblázat.`,
@@ -21,6 +23,7 @@ export function dijkstraSteps(g, start = 0) {
     },
   });
 
+  // Szomszédok kigyűjtése egy csúcsból
   function neighbors(v) {
     const res = [];
     g.edges.forEach((e) => {
@@ -34,6 +37,7 @@ export function dijkstraSteps(g, start = 0) {
     let v = -1,
       best = Infinity;
 
+    // Legkisebb távolságú, még nem rögzített csúcs keresése
     for (let i = 0; i < n; i++)
       if (!used.has(i) && dist[i] < best) {
         best = dist[i];
@@ -45,6 +49,7 @@ export function dijkstraSteps(g, start = 0) {
 
     used.add(v);
 
+    // Lépés rögzítése: csúcs rögzítése
     steps.push({
       phase: "Kiválasztás",
       msg: `V${v} rögzítve (d=${best}).`,
@@ -60,6 +65,7 @@ export function dijkstraSteps(g, start = 0) {
       },
     });
 
+    // Szomszédok bejárása
     for (const [to, w] of neighbors(v)) {
       if (used.has(to)) {
         continue;
@@ -67,9 +73,11 @@ export function dijkstraSteps(g, start = 0) {
 
       const nd = dist[v] + w;
 
+      // Ha rövidebb utat találtunk, frissítjük
       if (nd < dist[to]) {
         dist[to] = nd;
         prev[to] = v;
+        // Lépés rögzítése: nyújtás
         steps.push({
           phase: "Nyújtás",
           msg: `V${v}→V${to} nyújtás: új d[V${to}]=${nd}.`,
@@ -92,6 +100,7 @@ export function dijkstraSteps(g, start = 0) {
     }
   }
 
+  // Befejező lépés rögzítése
   steps.push({
     phase: "Kész",
     msg: "Dijkstra kész.",

@@ -1,3 +1,4 @@
+// Modulok elérési útjainak listája
 export const MODULES = {
   algorithms: {
     bfs: "./algorithms/bfs.js",
@@ -15,6 +16,7 @@ export const MODULES = {
   },
 };
 
+// Algoritmus modul dinamikus betöltése név alapján
 export async function loadAlgorithm(id) {
   const path = MODULES.algorithms[id];
   if (!path) throw new Error("Ismeretlen algoritmus: " + id);

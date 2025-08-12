@@ -1,11 +1,12 @@
 import { el, $ } from "../utils/dom.js";
 
+// Mátrix osztály
 export class MatrixEditor {
   constructor(root) {
     this.root = root;
-    this.n = +$("#n").value;
-    this.directed = $("#directed").checked;
-    this.weighted = $("#weighted").checked;
+    this.n = +$("#n").value; // Csúcsok száma
+    this.directed = $("#directed").checked; // Irányítottság
+    this.weighted = $("#weighted").checked; // Súlyozottság
     this.build();
   }
   build() {
@@ -15,6 +16,7 @@ export class MatrixEditor {
     const trh = el("tr");
     trh.append(el("th", { html: "i/j" }));
 
+    // Fejléc feltöltése csúcsokkal
     for (let j = 0; j < this.n; j++) {
       trh.append(el("th", { html: "V" + j }));
     }
@@ -27,12 +29,14 @@ export class MatrixEditor {
       const tr = el("tr");
       tr.append(el("th", { html: "V" + i }));
       for (let j = 0; j < this.n; j++) {
+        // Mátrix cella input létrehozása
         const inp = el("input", {
           type: "number",
           value: i === j ? 0 : 0,
           step: "1",
           id: `cell-${i}-${j}`,
         });
+        // Szimmetrikus kitöltés, ha nem irányított
         inp.addEventListener("input", () => {
           if (!this.directed && i !== j) {
             const sym = this.root.querySelector(`#cell-${j}-${i}`);
@@ -46,10 +50,12 @@ export class MatrixEditor {
     tbl.append(tbody);
     this.root.append(tbl);
   }
+  // Mátrix átméretezése
   resize(n) {
     this.n = n;
     this.build();
   }
+  // Mátrix kiolvasása 2D tömbbe
   toMatrix() {
     const A = [...Array(this.n)].map(() => Array(this.n).fill(0));
     for (let i = 0; i < this.n; i++)
@@ -60,6 +66,7 @@ export class MatrixEditor {
       }
     return A;
   }
+  // Véletlen mátrix generálása
   randomize() {
     const directed = $("#directed").checked;
     for (let i = 0; i < this.n; i++)
@@ -73,6 +80,7 @@ export class MatrixEditor {
         if (!directed) this.root.querySelector(`#cell-${j}-${i}`).value = put;
       }
   }
+  // Mátrix törlése (nullázás)
   clear() {
     for (let i = 0; i < this.n; i++)
       for (let j = 0; j < this.n; j++)
