@@ -82,8 +82,33 @@ export class MatrixEditor {
   }
   // Mátrix törlése (nullázás)
   clear() {
-    for (let i = 0; i < this.n; i++)
-      for (let j = 0; j < this.n; j++)
+    for (let i = 0; i < this.n; i++) {
+      for (let j = 0; j < this.n; j++) {
         this.root.querySelector(`#cell-${i}-${j}`).value = i === j ? 0 : 0;
+      }
+    }
+  }
+
+  loadFromArray(inputArray) {
+    const inputArrayLength = inputArray.length;
+
+    if (
+      !inputArrayLength ||
+      inputArray.some((r) => r.length !== inputArrayLength)
+    )
+      throw new Error("A betöltött mátrix nem négyzetes.");
+
+    this.n = inputArrayLength;
+    $("#n").value = inputArrayLength; // UI frissítése
+    this.build();
+
+    for (let i = 0; i < inputArrayLength; i++) {
+      for (let j = 0; j < inputArrayLength; j++) {
+        const v = Number(inputArray[i][j]);
+        this.root.querySelector(`#cell-${i}-${j}`).value = Number.isFinite(v)
+          ? v
+          : 0;
+      }
+    }
   }
 }

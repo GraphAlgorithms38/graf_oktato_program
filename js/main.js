@@ -18,13 +18,82 @@ async function getAlgorithm(id) {
   return mod;
 }
 
+// mátrix UI viselkedése
 const Matrix = new MatrixEditor($("#matrix"));
 const View = new GraphView($("#graphSvg"), {
   onNodeDblClick: (i) => UI.setStart(i),
 });
-
 const Steps = new Stepper();
 Steps.onApply = (s, idx, total) => UI.renderStep(s, idx, total);
+
+// szomszédsági mátrix fájl feltöltés kezelése
+function parseMatrixText(text) {
+  // sorok nem lehetnek üresek
+  // whitespace-ek 0-ként kezelése
+  // számokká konvertálás
+  // maximális mátrix méret 12x12
+  const rows = text
+    .split(/\r?\n/)
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0)
+    .map((r) => r.split(/\s+/).map((x) => Number(x)));
+
+  if (rows.length === 0) throw new Error("Üres fájl.");
+  const n = rows[0].length;
+  if (rows.some((r) => r.length !== n))
+    throw new Error(
+      "Nem egységes a sorhossz (a megadott mátrix nem négyzetes vagy hiányos)."
+    );
+  if (rows.length !== n)
+    throw new Error("A megadott mátrix nem négyzetes (sorok ≠ oszlopok).");
+
+  if (rows.length > 12)
+    throw new Error(
+      "A megadott mátrix nagyobb, mint a maximális engedélyezett (12x12)."
+    );
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (!Number.isFinite(rows[i][j])) {
+        throw new Error(
+          `Nem szám szerepel a (${i},${j}) pozíción: "${rows[i][j]}"`
+        );
+      }
+    }
+  }
+  return rows;
+}
+
+$("#fileInput").addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+
+  if (!file) return;
+
+  // csak szövegfájlokat engedünk feltölteni
+  const isText =
+    (file.type && file.type.startsWith("text")) || /\.txt$/i.test(file.name);
+
+  if (!isText) {
+    toast("Csak szövegfájl tölthető fel (.txt formátum).");
+    e.target.value = "";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const A = parseMatrixText(text);
+    Matrix.loadFromArray(A);
+    toast(`Mátrix betöltve (${A.length}×${A.length}).`);
+    //azonnal felépítjük a gráfot
+    document.querySelector("#buildGraph").click();
+  } catch (err) {
+    console.error(err);
+    toast("Gráf betöltési hiba: " + err.message);
+  } finally {
+    // reseteljük az állapotot
+    e.target.value = "";
+  }
+});
 
 function renderBuildSteps(A, directed) {
   const tb = $("#buildTbody");
@@ -82,17 +151,20 @@ const UI = {
   currentAlgorithm: "bfs",
   startNode: 0,
   targetNode: 1,
+
   setStart(i) {
     this.startNode = i;
     toast(`Kezdőcsúcs: V${i}`);
     View.setHighlights({ source: i });
     this.runAlgorithm();
   },
+
   setTarget(i) {
     this.targetNode = i;
     toast(`Célcsúcs: V${i}`);
     this.runAlgorithm();
   },
+
   async runAlgorithm() {
     const A = Matrix.toMatrix();
     const directed = $("#directed").checked;

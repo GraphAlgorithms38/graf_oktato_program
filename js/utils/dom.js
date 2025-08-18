@@ -24,5 +24,5 @@ export function toast(msg) {
   if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1600);
+  setTimeout(() => t.classList.remove("show"), 6000);
 }

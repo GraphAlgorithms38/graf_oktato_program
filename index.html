@@ -20,10 +20,15 @@
             <label for="n">Csúcsok száma</label>
             <input id="n" type="number" min="2" max="12" value="5" />
             <label><input id="directed" type="checkbox" /> Irányított</label>
-            <label
-              ><input id="weighted" type="checkbox" checked /> Súlyozott</label
-            >
+            <label><input id="weighted" type="checkbox" checked /> Súlyozott</label>
           </div>
+
+          <div class="row" style="margin-top:30px">
+            <h2>Gráf felépítése fájlból</h2>
+            <input id="fileInput" type="file" accept=".txt,text/plain" />
+            <span class="hint">Elvárt fájlformátum: számok soronként, szóközzel elválasztva (N×N).</span>
+          </div>
+
           <div class="divider"></div>
           <div class="row">
             <button id="resize" class="btn">Mátrix méretezése</button>
