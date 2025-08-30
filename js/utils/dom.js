@@ -3,16 +3,16 @@ export const $ = (sel) => document.querySelector(sel);
 
 // Új DOM elem létrehozása attribútumokkal és gyerekekkel
 export const el = (tag, attrs = {}, ...children) => {
-  const n = document.createElement(tag);
+  const element = document.createElement(tag);
 
   for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") n.className = v;
-    else if (k === "html") n.innerHTML = v;
-    else n.setAttribute(k, v);
+    if (k === "class") element.className = v;
+    else if (k === "html") element.innerHTML = v;
+    else element.setAttribute(k, v);
   }
 
-  children.forEach((c) => n.append(c));
-  return n;
+  children.forEach((c) => element.append(c));
+  return element;
 };
 
 // Érték korlátozása adott intervallumra
@@ -20,9 +20,9 @@ export const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
 // Toast üzenet megjelenítése
 export function toast(msg) {
-  const t = $("#toast");
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 6000);
+  const toast = $("#toast");
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 6000);
 }

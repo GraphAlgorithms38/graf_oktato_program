@@ -1,8 +1,8 @@
 // Dijkstra algoritmus lépéseinek kezelése
-export function dijkstraSteps(g, start = 0) {
-  const n = g.n;
-  const dist = Array(n).fill(Infinity); // Távolságok tömbje
-  const prev = Array(n).fill(null); // Előző elemek tömbje
+export function dijkstraSteps(graph, start = 0) {
+  const node = graph.n;
+  const dist = Array(node).fill(Infinity); // Távolságok tömbje
+  const prev = Array(node).fill(null); // Előző elemek tömbje
   const used = new Set(); // Rögzített csúcsok
   dist[start] = 0;
   const steps = [];
@@ -26,19 +26,19 @@ export function dijkstraSteps(g, start = 0) {
   // Szomszédok kigyűjtése egy csúcsból
   function neighbors(v) {
     const res = [];
-    g.edges.forEach((e) => {
-      if (e.u === v) res.push([e.v, e.w, e]);
-      if (!g.directed && e.v === v) res.push([e.u, e.w, e]);
+    graph.edges.forEach((edge) => {
+      if (edge.u === v) res.push([edge.v, edge.w, edge]);
+      if (!graph.directed && edge.v === v) res.push([edge.u, edge.w, edge]);
     });
     return res;
   }
 
-  while (used.size < n) {
+  while (used.size < node) {
     let v = -1,
       best = Infinity;
 
     // Legkisebb távolságú, még nem rögzített csúcs keresése
-    for (let i = 0; i < n; i++)
+    for (let i = 0; i < node; i++)
       if (!used.has(i) && dist[i] < best) {
         best = dist[i];
         v = i;
@@ -103,7 +103,7 @@ export function dijkstraSteps(g, start = 0) {
   // Befejező lépés rögzítése
   steps.push({
     phase: "Kész",
-    msg: "Dijkstra kész.",
+    msg: "Dijkstra algoritmus befejeződött.",
     graph: { source: start },
     tables: {
       main: [["Csúcs", "d", "előd"]].concat(

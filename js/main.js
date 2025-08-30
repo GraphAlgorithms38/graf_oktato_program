@@ -2,9 +2,10 @@ import { $, el, clamp, toast } from "./utils/dom.js";
 import { Stepper } from "./utils/stepper.js";
 import { Graph } from "./core/graph.js";
 import { GraphView } from "./core/view.js";
+import { HungarianView } from "./core/hungarian_view.js";
 import { MatrixEditor } from "./core/matrix.js";
-import { validateAlgo } from "./validation.js";
-import { loadAlgorithm } from "./modules.js";
+import { validateAlgorithm } from "./validation.js";
+import { MODULES, loadAlgorithm } from "./modules.js";
 
 const algoCache = new Map();
 
@@ -21,10 +22,11 @@ async function getAlgorithm(id) {
 // mátrix UI viselkedése
 const Matrix = new MatrixEditor($("#matrix"));
 const View = new GraphView($("#graphSvg"), {
-  onNodeDblClick: (i) => UI.setStart(i),
+  onNodeDblClick: (node) => UI.setStart(node),
 });
+let HungView = null;
 const Steps = new Stepper();
-Steps.onApply = (s, idx, total) => UI.renderStep(s, idx, total);
+Steps.onApply = (s, index, total) => UI.renderStep(s, index, total);
 
 // szomszédsági mátrix fájl feltöltés kezelése
 function parseMatrixText(text) {
@@ -108,7 +110,10 @@ function renderBuildSteps(A, directed) {
   for (let i = 0; i < n; i++)
     for (let j = 0; j < n; j++)
       if (A[i][j] !== 0)
-        ops.push(["Él létrehozása", `V${i} → V${j} súly/kapacitás ${A[i][j]}`]);
+        ops.push([
+          "Él létrehozása",
+          `V${i} → V${j}, súly/kapacitás: ${A[i][j]}`,
+        ]);
   ops.forEach((r, idx) => {
     const tr = el("tr", { class: idx === 0 ? "highlight" : "" });
 
@@ -122,59 +127,50 @@ function renderBuildSteps(A, directed) {
   });
 }
 
-function tableFrom(data) {
-  const table = el("table");
-  const thead = el("thead");
-  const tbody = el("tbody");
-
-  if (!data || data.length === 0) {
-    return el("div", {}, el("div", { class: "hint", html: "—" }));
-  }
-
-  const head = data[0];
-  const thr = el("tr");
-  head.forEach((h) => thr.append(el("th", { html: String(h) })));
-  thead.append(thr);
-
-  for (let i = 1; i < data.length; i++) {
-    const tr = el("tr");
-    data[i].forEach((cell) => tr.append(el("td", { html: String(cell) })));
-    tbody.append(tr);
-  }
-  table.append(thead, tbody);
-
-  return table;
-}
-
 const UI = {
   graph: null,
   currentAlgorithm: "bfs",
   startNode: 0,
   targetNode: 1,
 
-  setStart(i) {
-    this.startNode = i;
-    toast(`Kezdőcsúcs: V${i}`);
-    View.setHighlights({ source: i });
+  setStart(node) {
+    this.startNode = node;
+    toast(`Kezdőcsúcs: V${node}`);
+    View.setHighlights({ source: node });
     this.runAlgorithm();
   },
 
-  setTarget(i) {
-    this.targetNode = i;
-    toast(`Célcsúcs: V${i}`);
+  setTarget(node) {
+    this.targetNode = node;
+    toast(`Célcsúcs: V${node}`);
     this.runAlgorithm();
   },
 
   async runAlgorithm() {
     const A = Matrix.toMatrix();
+
+    if (this.currentAlgorithm === "hungarian") {
+      // Gráf kirajzolása a Magyar módszerhez
+      if (!HungView) {
+        HungView = new HungarianView($("#graphSvg"));
+      }
+      HungView.setMatrix(A);
+
+      const mod = await getAlgorithm("hungarian");
+      const steps = mod.hungarianSteps(A.map((r) => r.slice())); // A[i][j] > 0 -> él
+      Steps.load(steps);
+      this.graph = null;
+      return;
+    }
+
     const directed = $("#directed").checked;
     // mindig újrageneráljuk a gráfot az aktuális mátrixból
     const g = Graph.fromAdj(A, directed);
     this.graph = g;
     View.setGraph(g);
 
-    // validáció
-    const { ok, errors, warnings } = validateAlgo(this.currentAlgorithm, {
+    // algoritmusokra validáció meghívása
+    const { ok, errors, warnings } = validateAlgorithm(this.currentAlgorithm, {
       g,
       A,
       start: this.startNode,
@@ -187,19 +183,27 @@ const UI = {
 
     if (!ok) {
       $("#explain").textContent = "Hiba: " + errors.join(" | ");
-      $("#auxTableWrap").innerHTML = "";
       $("#stepKpi").textContent = "–";
       $("#phaseKpi").textContent = "Hiba";
+      Steps.reset();
       return;
     }
 
-    // algoritmus futtatása
+    // kiválasztott algoritmus futtatása
     const mod = await getAlgorithm(this.currentAlgorithm);
     let steps = [];
     if (this.currentAlgorithm === "bfs") {
       steps = mod.bfsSteps(g, this.startNode);
     } else if (this.currentAlgorithm === "dijkstra") {
       steps = mod.dijkstraSteps(g, this.startNode);
+    } else if (this.currentAlgorithm === "hungarian") {
+      const n = A.length;
+      const M = A.map((r) => r.slice());
+      steps = mod.hungarianSteps(M);
+    } else if (this.currentAlgorithm === "kruskal") {
+      steps = mod.kruskalSteps(g);
+    } else if (this.currentAlgorithm === "maxflow") {
+      steps = mod.maxflowSteps(g, this.startNode, this.targetNode);
     }
     Steps.load(steps);
   },
@@ -208,9 +212,13 @@ const UI = {
     $("#stepKpi").textContent = `${idx + 1}/${total || "–"}`;
     $("#phaseKpi").textContent = s ? s.phase : "–";
     $("#explain").textContent = s ? s.msg : "—";
-    $("#auxTableWrap").innerHTML = "";
-    if (s && s.tables && s.tables.aux)
-      $("#auxTableWrap").append(tableFrom(s.tables.aux));
+
+    // Magyar módszer overlay
+    if (s && s.graph && s.graph.type === "hungarian") {
+      HungView?.renderOverlay(s.graph);
+      return;
+    }
+
     if (this.graph) {
       const hi = {
         nodes: s?.graph?.nodes || new Set(),
@@ -245,11 +253,12 @@ $("#directed").addEventListener("change", () => {
 
 $("#weighted").addEventListener("change", () => {
   refreshAdjFlags();
-  toast($("#weighted").checked ? "Súlyok használata" : "Súlyok nélkül");
+  toast($("#weighted").checked ? "Súlyok bekapcsolva" : "Súlyok kikapcsolva");
 });
 
 $("#buildGraph").addEventListener("click", () => {
   const A = Matrix.toMatrix();
+
   const directed = $("#directed").checked;
   const g = Graph.fromAdj(A, directed);
   UI.graph = g;
@@ -266,7 +275,8 @@ $("#prev").addEventListener("click", () => Steps.prev());
 $("#reset").addEventListener("click", () => Steps.reset());
 $("#play").addEventListener("click", () => Steps.play());
 
-const ALGOS = [
+// algoritmusok kezdőállapota
+const ALGORITHMS = [
   {
     id: "bfs",
     name: "Szélességi (BFS)",
@@ -311,35 +321,96 @@ const ALGOS = [
         })()
       ),
   },
+  {
+    id: "hungarian",
+    name: "Magyar módszer",
+    params: () =>
+      el(
+        "div",
+        {},
+        el("span", {
+          class: "hint",
+          html: "A[i][j]>0 ⇒ él Lᵢ–Uⱼ. Címkék és párosítás kiemelve.",
+        })
+      ),
+  },
+  {
+    id: "kruskal",
+    name: "Kruskal (MST)",
+    params: () =>
+      el(
+        "div",
+        {},
+        el("span", {
+          class: "hint",
+          html: "Irányítatlan, súlyozott gráf szükséges.",
+        })
+      ),
+  },
+  {
+    id: "maxflow",
+    name: "Ford–Fulkerson",
+    params: () =>
+      el(
+        "div",
+        {},
+        el("label", { html: "Forrás:" }),
+        (() => {
+          const s = el("input", {
+            type: "number",
+            min: 0,
+            max: Matrix.n - 1,
+            value: UI.startNode,
+          });
+          s.addEventListener("input", () => {
+            UI.startNode = clamp(+s.value, 0, Matrix.n - 1);
+            UI.runAlgo();
+          });
+          return s;
+        })(),
+        el("label", { html: "Nyelő:" }),
+        (() => {
+          const t = el("input", {
+            type: "number",
+            min: 0,
+            max: Matrix.n - 1,
+            value: UI.targetNode,
+          });
+          t.addEventListener("input", () => {
+            UI.targetNode = clamp(+t.value, 0, Matrix.n - 1);
+            UI.runAlgo();
+          });
+          return t;
+        })()
+      ),
+  },
 ];
 
 function renderTabs() {
   const wrap = $("#algoTabs");
   wrap.innerHTML = "";
-  ALGOS.forEach((a) => {
-    const b = el("div", {
+
+  ALGORITHMS.forEach((a) => {
+    const tab = el("div", {
       class: "tab" + (UI.currentAlgorithm === a.id ? " active" : ""),
       html: a.name,
     });
-    b.addEventListener("click", () => {
+    tab.addEventListener("click", async () => {
       UI.currentAlgorithm = a.id;
       renderTabs();
       renderParams();
-      UI.runAlgorithm();
+      await UI.runAlgorithm();
     });
-    wrap.append(b);
+    wrap.append(tab);
   });
 }
 
 function renderParams() {
   const p = $("#algoParams");
   p.innerHTML = "";
-  const conf = ALGOS.find((x) => x.id === UI.currentAlgorithm);
+  const conf = ALGORITHMS.find((x) => x.id === UI.currentAlgorithm);
   if (conf && conf.params) p.append(conf.params());
 }
-
-renderTabs();
-renderParams();
 
 // Inicializáció
 Matrix.randomize();

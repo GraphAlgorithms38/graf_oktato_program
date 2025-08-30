@@ -111,4 +111,15 @@ export class MatrixEditor {
       }
     }
   }
+
+  convertZerosToBigCost(big = 1e9) {
+    for (let i = 0; i < this.n; i++) {
+      for (let j = 0; j < this.n; j++) {
+        if (i === j) continue; // főátló marad 0
+        const cell = this.root.querySelector(`#cell-${i}-${j}`);
+        const v = Number(cell.value) || 0;
+        if (v === 0) cell.value = String(big);
+      }
+    }
+  }
 }

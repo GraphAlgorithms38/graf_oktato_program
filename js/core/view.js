@@ -2,7 +2,7 @@
 export class GraphView {
   constructor(svg, { onNodeDblClick } = {}) {
     this.svg = svg;
-    this.g = null;
+    this.graph = null;
     this.pos = [];
     // Kiemelések (pl. bejárt csúcsok, élek)
     this.highlight = {
@@ -13,8 +13,8 @@ export class GraphView {
     };
     this.onNodeDblClick = onNodeDblClick || (() => {});
   }
-  setGraph(g) {
-    this.g = g;
+  setGraph(graph) {
+    this.graph = graph;
     this.layoutCircle();
     this.render();
   }
@@ -25,24 +25,24 @@ export class GraphView {
       cx = W / 2,
       cy = H / 2,
       r = Math.min(W, H) * 0.36;
-    const n = this.g.n;
+    const n = this.graph.n;
     this.pos = [...Array(n)].map((_, i) => {
       const ang = (i / n) * 2 * Math.PI - Math.PI / 2;
       return { x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang) };
     });
-    this.g.nodes.forEach((nd, i) => {
+    this.graph.nodes.forEach((nd, i) => {
       nd.x = this.pos[i].x;
       nd.y = this.pos[i].y;
     });
   }
   // Él azonosító generálása
-  _edgeId(e) {
-    return `${e.u}-${e.v}`;
+  _edgeId(edge) {
+    return `${edge.u}-${edge.v}`;
   }
   render() {
     const svg = this.svg;
     svg.innerHTML = "";
-    if (!this.g) return;
+    if (!this.graph) return;
     // Nyílhegy definiálása
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const marker = document.createElementNS(
@@ -64,9 +64,9 @@ export class GraphView {
     svg.appendChild(defs);
 
     // Élek kirajzolása
-    this.g.edges.forEach((e) => {
-      const a = this.g.nodes[e.u],
-        b = this.g.nodes[e.v];
+    this.graph.edges.forEach((e) => {
+      const a = this.graph.nodes[e.u],
+        b = this.graph.nodes[e.v];
       const line = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "line"
@@ -79,7 +79,7 @@ export class GraphView {
         "class",
         `edge ${this.highlight.edges.has(this._edgeId(e)) ? "highlight" : ""}`
       );
-      if (this.g.directed) line.setAttribute("marker-end", "url(#arrow)");
+      if (this.graph.directed) line.setAttribute("marker-end", "url(#arrow)");
       svg.appendChild(line);
       // Súly címke az él közepén
       const midx = (a.x + b.x) / 2,
@@ -106,7 +106,7 @@ export class GraphView {
     });
 
     // Csúcsok kirajzolása
-    this.g.nodes.forEach((nd, i) => {
+    this.graph.nodes.forEach((nd, i) => {
       const gg = document.createElementNS("http://www.w3.org/2000/svg", "g");
       gg.setAttribute(
         "class",

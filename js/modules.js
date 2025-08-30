@@ -3,10 +3,14 @@ export const MODULES = {
   algorithms: {
     bfs: "./algorithms/bfs.js",
     dijkstra: "./algorithms/dijkstra.js",
+    hungarian: "./algorithms/hungarian.js",
+    kruskal: "./algorithms/kruskal.js",
+    maxflow: "./algorithms/maxflow.js",
   },
   core: {
     graph: "./core/graph.js",
     view: "./core/view.js",
+    hungarian_view: "./core/hungarian_view.js",
     matrix: "./core/matrix.js",
   },
   utils: {

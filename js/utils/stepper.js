@@ -2,7 +2,7 @@
 export class Stepper {
   constructor() {
     this.steps = []; // Lépések listája
-    this.idx = 0; // Aktuális lépés indexe
+    this.index = 0; // Aktuális lépés indexe
     this.timer = null; // Automatikus lejátszás időzítője
     this.onApply = () => {}; // Callback a lépés alkalmazásakor
   }
@@ -10,35 +10,35 @@ export class Stepper {
   // Lépéssorozat betöltése
   load(steps) {
     this.steps = steps || [];
-    this.idx = 0;
+    this.index = 0;
     this.apply();
   }
 
   // Aktuális lépés alkalmazása
   apply() {
-    const s = this.steps[this.idx];
-    this.onApply(s, this.idx, this.steps.length);
+    const s = this.steps[this.index];
+    this.onApply(s, this.index, this.steps.length);
   }
 
   // Ugrás a következő lépésre
   next() {
-    if (this.idx < this.steps.length - 1) {
-      this.idx++;
+    if (this.index < this.steps.length - 1) {
+      this.index++;
       this.apply();
     }
   }
 
   // Előző lépésre ugrás
   prev() {
-    if (this.idx > 0) {
-      this.idx--;
+    if (this.index > 0) {
+      this.index--;
       this.apply();
     }
   }
 
   // Visszaállítás
   reset() {
-    this.idx = 0;
+    this.index = 0;
     this.apply();
   }
 
@@ -52,7 +52,7 @@ export class Stepper {
     }
     document.querySelector("#play").textContent = "Szünet";
     this.timer = setInterval(() => {
-      if (this.idx < this.steps.length - 1) this.next();
+      if (this.index < this.steps.length - 1) this.next();
       else this.play();
     }, 900);
   }

@@ -147,14 +147,6 @@ button:hover {
   border-color: #4a3915;
 }
 
-/* Kétoszlopos elrendezés */
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  height: 100%;
-}
-
 /* Tábla elrendezése */
 .board {
   border-top: 1px solid var(--border);
@@ -171,9 +163,9 @@ button:hover {
   border-right: 1px solid var(--border);
 }
 
-.pane:last-child {
+/* .pane:last-child {
   border-right: none;
-}
+} */
 
 .pane header {
   display: flex;
@@ -239,7 +231,7 @@ svg {
   display: block;
 }
 
-/* Csúcs (node) stílusok */
+/* Csúcsok stílusa (node) */
 .node {
   transition: transform 0.15s ease;
 }
@@ -254,6 +246,20 @@ svg {
   font-size: 12px;
   pointer-events: none;
   fill: #e5e7eb;
+}
+
+/* Címkék a Magyar módszerhez */
+.node.labelL circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.node.labelU circle {
+  stroke: var(--accent-2);
+  stroke-width: 3;
+}
+.node.frontier circle {
+  stroke: var(--warn);
+  stroke-width: 3;
 }
 
 /* Élek stílusai */
@@ -291,7 +297,7 @@ svg {
   align-items: center;
 }
 
-/* Bbadge stílus */
+/* Badge stílus */
 .badge {
   font-size: 12px;
   color: #93c5fd;
